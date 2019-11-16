@@ -7,9 +7,11 @@ import (
 	"io/ioutil"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"encoding/hex"
 	"time"
+	"bytes"
 )
 
 /**
@@ -129,8 +131,21 @@ func verifyHashes(t time.Time, db *bitcask.Bitcask) {
 		if !(compareHash(oldHash, newHash) == 0) {
 			insertRecord(fn, newHash, db)
 			log.Println("changed detected - updating hash, action required")
+			takeAction("./build build bin")
 		} 
 	}
+}
+
+func takeAction(action string) {
+	log.Println("Taking action, running: "+action)
+	cmd := exec.Command("/bin/sh", "-c", action)
+	var outb, errb bytes.Buffer
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+	err := cmd.Run()
+	handleError(err)
+	log.Println(outb.String())
+
 }
 
 func doEvery(d time.Duration, f func(time.Time, *bitcask.Bitcask), db* bitcask.Bitcask) {
