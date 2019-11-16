@@ -131,7 +131,7 @@ func verifyHashes(t time.Time, db *bitcask.Bitcask) {
 		if !(compareHash(oldHash, newHash) == 0) {
 			insertRecord(fn, newHash, db)
 			log.Println("changed detected - updating hash, action required")
-			takeAction("./build build docker")
+			takeAction("./build build docker && kubectl delete --all deployments && kubectl delete --all services && kubectl apply -f deploy.yml")
 		} 
 	}
 }
@@ -145,6 +145,9 @@ func takeAction(action string) {
 	err := cmd.Run()
 	handleError(err)
 	log.Println(outb.String())
+	log.Println(errb.String())
+	log.Println("--------------------------------------------------------------------------------")
+	log.Println("control returned to gofigure")
 
 }
 
