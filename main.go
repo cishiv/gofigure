@@ -131,7 +131,7 @@ func verifyHashes(t time.Time, db *bitcask.Bitcask) {
 		if !(compareHash(oldHash, newHash) == 0) {
 			insertRecord(fn, newHash, db)
 			log.Println("changed detected - updating hash, action required")
-			takeAction("./build build bin")
+			takeAction("./build build docker")
 		} 
 	}
 }
