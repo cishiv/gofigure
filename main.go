@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"encoding/hex"
+	"time"
 )
 
 /**
@@ -35,6 +36,8 @@ func main() {
 	 db, _ := bitcask.Open("/tmp/db")
      defer db.Close()
      startup(db)
+     debugDB(db)
+     doEvery(2*time.Second, verifyHashes, db)
 }
 
 // we need to convert unfortunately :(
@@ -57,15 +60,19 @@ func startup(db* bitcask.Bitcask) {
 func buildRegistry(db* bitcask.Bitcask) {
 	log.Println("starting directory scan")
 	recursiveDirectoryCrawl(".", db)
-	log.Println("computing hashes")
+	log.Println("computing hashes & creating Bitcask entires")
 	for _, fn := range registry {
-		log.Println(fn + " " + calculateHash(fn))
+		hash := calculateHash(fn)
+		log.Println(fn + " " + hash)
+		insertRecord(fn, hash, db)
 	}
-	log.Println("creating entries")
 }
 
-
-
+func debugDB(db* bitcask.Bitcask) {
+	for _, fn := range registry {
+		log.Println("from database: " + fn + ":" +   retrieveHash(fn, db))
+	}
+}
 func insertRecord(absoluteFilePath string, hash string, db* bitcask.Bitcask) {
     db.Put([]byte(absoluteFilePath), []byte(hash))
 }
@@ -75,6 +82,7 @@ func retrieveHash(absoluteFilePath string, db* bitcask.Bitcask) string {
 	return CToGoString(val)
 }
 
+// we need to ignore .git
 func recursiveDirectoryCrawl(dirName string, db* bitcask.Bitcask) {
 	files, err := ioutil.ReadDir(dirName)
 	handleError(err)
@@ -84,10 +92,12 @@ func recursiveDirectoryCrawl(dirName string, db* bitcask.Bitcask) {
 		switch mode := fileOrDir.Mode(); {
 		case mode.IsDir():
 			// keep looking for files
-			recursiveDirectoryCrawl(dirName + "/" + f.Name(), db)
+			if !(f.Name() == ".git") {
+				recursiveDirectoryCrawl(dirName + "/" + f.Name(), db)
+			}
 		case mode.IsRegular():
-			absolutePath := dirName + "/" + f.Name();
-			registry = append(registry, absolutePath)
+			absolutePath := dirName + "/" + f.Name()
+			registry = append(registry, absolutePath)		
 		}
 	}
 }
@@ -112,4 +122,19 @@ func compareHash(old string, new string) int {
 	return strings.Compare(old, new)
 }
 
-func recomputeHash() {}
+func verifyHashes(t time.Time, db *bitcask.Bitcask) {
+	for _, fn := range registry {
+		oldHash := retrieveHash(fn, db)
+		newHash := calculateHash(fn)
+		if !(compareHash(oldHash, newHash) == 0) {
+			insertRecord(fn, newHash, db)
+			log.Println("changed detected - updating hash, action required")
+		} 
+	}
+}
+
+func doEvery(d time.Duration, f func(time.Time, *bitcask.Bitcask), db* bitcask.Bitcask) {
+	for x := range time.Tick(d) {
+		f(x, db)
+	}
+}
