@@ -18,7 +18,7 @@ When a hash change is detected for a file, we run:
 
 `./build build docker && kubectl delete --all deployments && kubectl delete --all services && kubectl apply -f deploy.yml` 
 
-which is a set of commands specific to bootstrapping and enviroment for [Cortex](github.com/cishiv/Cortex) (currently a private repo) 
+which is a set of commands specific to bootstrapping an enviroment for [Cortex](github.com/cishiv/Cortex) (currently a private repo) 
 
 `./build build docker` is a custom build script for the Cortex project.
 
