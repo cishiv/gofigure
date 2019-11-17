@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"strconv"
 	"net/http"
+	"path/filepath"
 )
 
 /**
@@ -35,6 +36,8 @@ import (
 	Currently using github.com/prologic/bitcask as an in memory k:v store for the file registry
 
 */
+// FIXME!!!! STARTING BUILDS CAUSES MORE BUILDS
+// SAFEGUARD IT
 var registry []string
 var buildHistory []Build
 var actions []string
@@ -62,14 +65,15 @@ func main() {
 	// init db
 	 actions = append(actions, "./build build docker && kubectl delete --all deployments && kubectl delete --all services && kubectl apply -f deploy.yml")
 	 actions = append(actions, "./build build docker")
-	 actions = append(actions, "go build")
+	 actions = append(actions, "./build build bin")
 	 db, _ := bitcask.Open("/tmp/db")
      defer db.Close()
      startup(db)
      debugDB(db)
      http.ListenAndServe(":3000", nil)
      // I probably need to think about this goroutine a bit
-     go doEvery(2*time.Second, verifyHashes, db , actions[0])
+     // k8s is a bit heavy for every file change
+     go doEvery(2*time.Second, verifyHashes, db , actions[2])
      router := NewRouter()
 	 log.Fatal(http.ListenAndServe(":8084", router))
      
@@ -223,8 +227,14 @@ func calcMD5(buildStart string, action string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func GetBaseDir() string {
-	return "github.com/cishiv/gofigure/"
+// TODO - Once we do vcs integration this will change
+func GetBaseDir() string { 
+ 	ex, err := os.Executable()
+    if err != nil {
+        panic(err)
+    }
+    exPath := filepath.Dir(ex)
+	return exPath
 }
 
 func ManualBuild(actionID string) {
