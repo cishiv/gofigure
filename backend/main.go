@@ -8,11 +8,11 @@ import (
 	"io/ioutil"
 	"io"
 	"os"
-	// "os/exec"
+	"os/exec"
 	"strings"
 	"encoding/hex"
 	"time"
-	// "bytes"
+	"bytes"
 	"strconv"
 	"net/http"
 )
@@ -176,18 +176,18 @@ func takeAction(action string) {
 	build := Build{BuildID:buildID,Time:startTime,Action:action, Outcome:"started"}
 	log.Println(build)
 	buildHistory = append(buildHistory, build)
-	// cmd := exec.Command("/bin/sh", "-c", action)
-	// var outb, errb bytes.Buffer
-	// cmd.Stdout = &outb
-	// cmd.Stderr = &errb
-	// err := cmd.Run()
-	// handleError(err)
-	// log.Println(outb.String())
-	// log.Println(errb.String())
+	cmd := exec.Command("/bin/sh", "-c", action)
+	var outb, errb bytes.Buffer
+	cmd.Stdout = &outb
+	cmd.Stderr = &errb
+	err := cmd.Run()
+	handleError(err)
+	log.Println(outb.String())
+	log.Println(errb.String())
 	log.Println("--------------------------------------------------------------------------------")
 	b := &buildHistory[getBuildByIDIndex(buildID)]
 	// simulate a build time; just so we can observe the ui intergration
-	time.Sleep(10000 * time.Millisecond)
+	// time.Sleep(10000 * time.Millisecond)
 	b.Outcome = "success"
 	log.Println(buildHistory)
 	log.Println("control returned to gofigure")
