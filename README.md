@@ -25,3 +25,76 @@ which is a set of commands specific to bootstrapping an enviroment for [Cortex](
 ## Extensions
 
 I will probably extend this and make it more configurable as needed. But it serves my purpose for the moment.
+
+
+## Proposed Design
+
+You should be able to configure job files (gofigure-{job_name}.json) that contain the stages for this job
+
+example
+-------
+
+gofigure-cortex.json -> `parse stages and then run them, if strictDepedency is true, then the stages are effectively chained with &&`
+```
+{
+	"jobType" : "build,test,deploy"
+	"jobStages" : [
+		"path/to/build/stage1",
+		"path/to/build/stage1",
+		"path/to/build/stage1"
+	],
+	"strictDependency" : true,
+	"automated" : true,
+	"watchFunction" : "file_hash"
+}
+```
+
+stage-build.json -> `docker build -t {image-name}:{tag} .`
+(not sure yet on ideal image tagging, but probably md5 hashing based on the file location and current sys time for default, of course
+configuration would be allowed)
+```
+{
+	"stage" : "build"
+	"target" : "docker"
+	"source" : "Dockerfile"
+	"locations" ["path/location1", "path/location2"]
+	"stageExecution" : "default", // can be ./bin/bash {script}
+}
+```
+
+stage-test.json  -> `cd /path/location(s) __test__`
+```
+{
+	"stage" : "build"
+	"target" : "go_test"
+	"source" : ".*test.*.go"
+	"locations" ["path/location1", "path/location2"],
+	"stageExecution" : "default", // can be ./bin/bash {script}
+}
+```
+
+stage-deploy.json -> `kubectl apply -f {source}`
+```
+{
+	"stage" : "build"
+	"target" : "kubernetes"
+	"source" : ".*deploy.*.yml"
+	"locations" ["path-to-descriptor/location1", "path-to-descriptor/location2"]
+	"stageExecution" : "default", // can be ./bin/bash {script}
+}
+```
+user interface
+--------------
+
+it might be worthwile to have a lightweight user interface that allows for job monitoring and configuration
+
+packaging
+----------
+would be ideal if this can be packaged into a single docker image, that could be run even if it wasn't in a specific directory.
+
+jobTypes
+---------
+checkout -> clone vcs (not yet designed) (probably only when this runs in docker)
+build -> produce binaries/images
+test -> run test suite
+deploy -> propogate into an environment (for the moment we target kubernetes)
