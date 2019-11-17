@@ -94,7 +94,7 @@ would be ideal if this can be packaged into a single docker image, that could be
 
 jobTypes
 ---------
-checkout -> clone vcs (not yet designed) (probably only when this runs in docker)
-build -> produce binaries/images
-test -> run test suite
-deploy -> propogate into an environment (for the moment we target kubernetes)
+- checkout -> clone vcs (not yet designed) (probably only when this runs in docker)
+- build -> produce binaries/images
+- test -> run test suite
+- deploy -> propogate into an environment (for the moment we target kubernetes)
