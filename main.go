@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"time"
 	"bytes"
+	"net/http"
 )
 
 /**
@@ -33,13 +34,17 @@ import (
 
 */
 var registry []string
+
 func main() {
 	// init db
 	 db, _ := bitcask.Open("/tmp/db")
      defer db.Close()
      startup(db)
      debugDB(db)
-     doEvery(2*time.Second, verifyHashes, db)
+     http.Handle("/", http.FileServer(http.Dir("./static")))
+     http.ListenAndServe(":3000", nil)
+     go doEvery(2*time.Second, verifyHashes, db)
+     
 }
 
 // we need to convert unfortunately :(
