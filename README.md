@@ -98,3 +98,17 @@ jobTypes
 - build -> produce binaries/images
 - test -> run test suite
 - deploy -> propogate into an environment (for the moment we target kubernetes)
+
+
+## Screenshots
+
+Just some screenshots for the initial UI I built using vanilla JS and Bulma
+
+[!](screenshots/1.png)
+[!](screenshots/2.png)
+[!](screenshots/3.png)
+[!](screenshots/4.png)
+[!](screenshots/5.png)
+[!](screenshots/7.png)
+[!](screenshots/7.png)
+[!](screenshots/8.png)
