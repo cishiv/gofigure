@@ -2,6 +2,8 @@
 
 "CI/CD, but worse"
 
+// FIXME - Infinite build loop if builds are manually initiated, I know how fix it, but it'll have to wait for now
+
 This is extremely specific to my setup for the moment.
 
 My current development environment is using Docker and Minikube, with a custom .sh build script
@@ -104,11 +106,11 @@ jobTypes
 
 Just some screenshots for the initial UI I built using vanilla JS and Bulma
 
-[!](screenshots/1.png)
-[!](screenshots/2.png)
-[!](screenshots/3.png)
-[!](screenshots/4.png)
-[!](screenshots/5.png)
-[!](screenshots/7.png)
-[!](screenshots/7.png)
-[!](screenshots/8.png)
+![](screenshots/1.png)
+![](screenshots/2.png)
+![](screenshots/3.png)
+![](screenshots/4.png)
+![](screenshots/5.png)
+![](screenshots/7.png)
+![](screenshots/7.png)
+![](screenshots/8.png)
