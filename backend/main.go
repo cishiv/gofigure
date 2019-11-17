@@ -4,14 +4,16 @@ import (
 	"log"
 	"github.com/prologic/bitcask"
 	"crypto/sha256"
+	"crypto/md5"
 	"io/ioutil"
 	"io"
 	"os"
-	"os/exec"
+	// "os/exec"
 	"strings"
 	"encoding/hex"
 	"time"
-	"bytes"
+	// "bytes"
+	"strconv"
 	"net/http"
 )
 
@@ -34,15 +36,40 @@ import (
 
 */
 var registry []string
+var buildHistory []Build
+var actions []string
+
+type Build struct {
+	BuildID string `json:"buildID"`
+	Time string `json:"time"`
+	Action string `json:"action"`
+	Outcome string `json:"outcome"`
+}
+
+func getBuildByIDIndex(buildID string) int {
+	for i,b := range buildHistory {
+		if(b.BuildID == buildID) {
+			return i
+		}
+	}
+	return -1
+}
+func (build Build) setOutcome(result string) {
+	build.Outcome = result;
+}
 
 func main() {
 	// init db
+	 actions = append(actions, "./build build docker && kubectl delete --all deployments && kubectl delete --all services && kubectl apply -f deploy.yml")
+	 actions = append(actions, "./build build docker")
+	 actions = append(actions, "go build")
 	 db, _ := bitcask.Open("/tmp/db")
      defer db.Close()
      startup(db)
      debugDB(db)
      http.ListenAndServe(":3000", nil)
-     go doEvery(2*time.Second, verifyHashes, db)
+     // I probably need to think about this goroutine a bit
+     go doEvery(2*time.Second, verifyHashes, db , actions[0])
      router := NewRouter()
 	 log.Fatal(http.ListenAndServe(":8084", router))
      
@@ -130,39 +157,82 @@ func compareHash(old string, new string) int {
 	return strings.Compare(old, new)
 }
 
-func verifyHashes(t time.Time, db *bitcask.Bitcask) {
+func verifyHashes(t time.Time, db *bitcask.Bitcask, action string) {
 	for _, fn := range registry {
 		oldHash := retrieveHash(fn, db)
 		newHash := calculateHash(fn)
 		if !(compareHash(oldHash, newHash) == 0) {
 			insertRecord(fn, newHash, db)
 			log.Println("changed detected - updating hash, action required")
-			takeAction("./build build docker && kubectl delete --all deployments && kubectl delete --all services && kubectl apply -f deploy.yml")
+			takeAction(action)
 		} 
 	}
 }
 
 func takeAction(action string) {
 	log.Println("Taking action, running: "+action)
-	cmd := exec.Command("/bin/sh", "-c", action)
-	var outb, errb bytes.Buffer
-	cmd.Stdout = &outb
-	cmd.Stderr = &errb
-	err := cmd.Run()
-	handleError(err)
-	log.Println(outb.String())
-	log.Println(errb.String())
+	startTime := getTime()
+	buildID := calcMD5(startTime, action)
+	build := Build{BuildID:buildID,Time:startTime,Action:action, Outcome:"started"}
+	log.Println(build)
+	buildHistory = append(buildHistory, build)
+	// cmd := exec.Command("/bin/sh", "-c", action)
+	// var outb, errb bytes.Buffer
+	// cmd.Stdout = &outb
+	// cmd.Stderr = &errb
+	// err := cmd.Run()
+	// handleError(err)
+	// log.Println(outb.String())
+	// log.Println(errb.String())
 	log.Println("--------------------------------------------------------------------------------")
+	b := &buildHistory[getBuildByIDIndex(buildID)]
+	// simulate a build time; just so we can observe the ui intergration
+	time.Sleep(10000 * time.Millisecond)
+	b.Outcome = "success"
+	log.Println(buildHistory)
 	log.Println("control returned to gofigure")
-
 }
 
-func doEvery(d time.Duration, f func(time.Time, *bitcask.Bitcask), db* bitcask.Bitcask) {
+func doEvery(d time.Duration, f func(time.Time, *bitcask.Bitcask, string), db* bitcask.Bitcask, action string) {
 	for x := range time.Tick(d) {
-		f(x, db)
+		f(x, db, action)
 	}
 }
 
-func FetchHash(absoluteFilePath string) string {
-	return calculateHash(absoluteFilePath)
+func FetchHashes() []string {
+	var hashes []string
+	for _, fn := range registry {
+		hashes = append(hashes, calculateHash(fn) + " ------------> " + fn)
+	}
+	return hashes
+}
+
+func GetBuildHistory() []Build {
+	return buildHistory
+}
+
+func getTime() string {
+	// convert to ms
+     currTime := time.Now().UnixNano() / (int64(time.Millisecond)/int64(time.Nanosecond))
+	 return strconv.FormatInt(currTime, 10)
+}
+
+func calcMD5(buildStart string, action string) string {
+	h := md5.New()
+	io.WriteString(h, buildStart + " " + action)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func GetBaseDir() string {
+	return "github.com/cishiv/gofigure/"
+}
+
+func ManualBuild(actionID string) {
+	i, err := strconv.Atoi(actionID)
+	handleError(err)
+	takeAction(actions[i])
+}
+
+func GetActions() []string {
+	return actions
 }

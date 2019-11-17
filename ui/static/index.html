@@ -49,15 +49,7 @@
       <strong>GoFigure</strong> by <a href="https://github.com/cishiv">Shivan Moodley</a>.
     </p>
   </div>
-  <p id = "result">No Result recieved yet</p>
 </footer>
   </body>
-  <script type="text/javascript">
-setInterval(function(){
-  fetch("http://localhost:8084/getHashInfo", {mode: 'cors'}) // Any output from the script will go to the "result" div
-  .then(response => response.text())
-  .catch(error => document.getElementById("result").innerHTML = error)
-  .then(response => document.getElementById("result").innerHTML = response)
-}, 2000); // Poll every 1000ms
 </script>
 </html>

@@ -32,16 +32,64 @@
 
     </div>
 </nav>
+<div class="container">
  <section class="section">
-    <div class="container">
-      <h1 class="title is-1">
+      <h1 id = "customTitle" class="title is-1">
         Dashboard
-      </h1>
-      <p class="subtitle">
-        Dashboards go here!
-      </p>
+      </h1>      
+</section>
+<section class="section" id="activeBuild">
+  <div class="container"></div>
+</section>
+<section class="section">
+     <h3 class="subtitle is-3">Manage</h3>
+     <div class="card is-fullwidth">
+      <header class="card-header">
+        <p class="card-header-title">Expand to manage builds for this project</p>
+        <a class="card-header-icon card-toggle">
+          <i class="fa fa-angle-down"></i>
+        </a>
+      </header>
+      <div class="card-content is-hidden">
+        <div class="content" id = "management">
+           
+        </div>
+      </div>
     </div>
-  </section>
+</section>
+  <section class="section">
+       <h3 class="subtitle is-3">Build Log</h3>
+      <div class="card is-fullwidth">
+      <header class="card-header">
+        <p class="card-header-title">Expand to view historical builds</p>
+        <a class="card-header-icon card-toggle">
+          <i class="fa fa-angle-down"></i>
+        </a>
+      </header>
+      <div class="card-content is-hidden">
+        <div class="content">
+            <ul id = "buildHistory"><li></li></ul>
+        </div>
+      </div>
+    </div>
+</section>
+<section class="section">
+      <h3 class="subtitle is-3">Hashes</h3>
+      <div class="card is-fullwidth">
+      <header class="card-header">
+        <p class="card-header-title">Expand to view calculated hashes</p>
+        <a class="card-header-icon card-toggle">
+          <i class="fa fa-angle-down"></i>
+        </a>
+      </header>
+      <div class="card-content is-hidden">
+        <div class="content">
+           <ul id = "hashes"><li>No hashes calculated</li></ul>
+        </div>
+      </div>
+    </div>
+</section>
+</div>
   <footer class="footer">
   <div class="content has-text-centered">
     <p>
@@ -50,4 +98,5 @@
   </div>
 </footer>
   </body>
+  <script type="text/javascript" src="api.js"></script>
 </html>

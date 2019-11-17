@@ -42,4 +42,28 @@ var routes = Routes{
         "/getHashInfo",
         GetHashInfo,
     },
+    Route{
+        "GetHistory",
+        "GET",
+        "/getHistory",
+        GetHistory,
+    },
+    Route{
+        "GetProjectName",
+        "GET",
+        "/getProjectName",
+        GetProjectName,
+    },
+    Route{
+        "StartBuild",
+        "GET",
+        "/startBuild/{id}",
+        StartBuild,
+    },
+    Route{
+        "GetJobs",
+        "GET",
+        "/getJobs",
+        GetJobs,
+    },
 }
