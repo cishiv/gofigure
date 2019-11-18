@@ -30,7 +30,6 @@ func GetJobs(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(jobs); err != nil {
 		panic(err)
 	}
-
 }
 
 func GetHistory(w http.ResponseWriter, r *http.Request) {
@@ -41,10 +40,6 @@ func GetHistory(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(builds); err != nil {
 		panic(err)
 	}
-}
-
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func GetProjectName(w http.ResponseWriter, r *http.Request) {
@@ -65,4 +60,10 @@ func StartBuild(w http.ResponseWriter, r * http.Request) {
 func ExtractVar(r *http.Request, varName string) string {
     	vars := mux.Vars(r)
      	return vars[varName]
+}
+
+// UTIL
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
