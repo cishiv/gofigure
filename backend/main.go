@@ -7,6 +7,7 @@ import (
 	"crypto/md5"
 	"io/ioutil"
 	"io"
+	"bufio"
 	"os"
 	"os/exec"
 	"strings"
@@ -41,6 +42,7 @@ import (
 var registry []string
 var buildHistory []Build
 var actions []string
+var whiteList []string
 
 type Build struct {
 	BuildID string `json:"buildID"`
@@ -69,8 +71,7 @@ func main() {
 	 db, _ := bitcask.Open("/tmp/db")
      defer db.Close()
      startup(db)
-     debugDB(db)
-     http.ListenAndServe(":3000", nil)
+     //debugDB(db)
      // I probably need to think about this goroutine a bit
      // k8s is a bit heavy for every file change
      go doEvery(2*time.Second, verifyHashes, db , actions[2])
@@ -93,6 +94,8 @@ func CToGoString(c []byte) string {
 
 func startup(db* bitcask.Bitcask) {
 	log.Println("building registry")
+    // probably should always create the whitelist before the registry
+    createWhiteList()
 	buildRegistry(db)
 }
 
@@ -105,6 +108,28 @@ func buildRegistry(db* bitcask.Bitcask) {
 		log.Println(fn + " " + hash)
 		insertRecord(fn, hash, db)
 	}
+}
+
+// assume that a file called .fignore exists at ./fignore , if not return a warning to the terminal and possibly expose rest endpoint that frontend can poll to indicate that .fignore needs to be created
+// we can use this `whitelist` file to ignore certain files in our hash recomputation so that we don't infinently kick off builds as result of builds
+// this will probably self-alleviate when we start building in docker or we start producing artifacts in other directories. but for now we need this
+// to avoid race conditions
+// we can only ignore regular files for the moment and not directories (TODO - this weekend) we probably need regex matching for that
+func createWhiteList () {
+	file, err := os.Open("./.fignore")
+	if err != nil {
+		log.Println("no .fignore file found, race condition will ensue if jobs edit files")
+	}
+	defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+    	log.Println(scanner.Text())
+        whiteList = append(whiteList, scanner.Text())
+    }
+    if err := scanner.Err(); err != nil {
+        log.Fatal(err)
+    }
 }
 
 func debugDB(db* bitcask.Bitcask) {
@@ -135,8 +160,19 @@ func recursiveDirectoryCrawl(dirName string, db* bitcask.Bitcask) {
 				recursiveDirectoryCrawl(dirName + "/" + f.Name(), db)
 			}
 		case mode.IsRegular():
-			absolutePath := dirName + "/" + f.Name()
-			registry = append(registry, absolutePath)		
+			// O(n) brute force search in honour of silicon valley s06e04
+			// if the file is whitelisted, don't add it to the registry
+			toAdd := true
+			for _, whitelisted := range whiteList {
+				if (f.Name() == whitelisted) {
+					toAdd = false
+					log.Println(f.Name() + " is whitelisted, not adding to registry")
+				}
+			}
+			if toAdd {
+				absolutePath := dirName + "/" + f.Name()
+				registry = append(registry, absolutePath)		
+			} 
 		}
 	}
 }
