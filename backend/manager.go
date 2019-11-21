@@ -75,18 +75,19 @@ func BuildRegistry(db* bitcask.Bitcask) {
 func CreateWhiteList () {
 	file, err := os.Open("./.fignore")
 	if err != nil {
-		log.Println("no .fignore file found, race condition will ensue if jobs edit files")
-	}
-	defer file.Close()
+		log.Println("no .fignore file found, race condition will ensue if jobs edit files -- will not create whitelist")
 
-    scanner := bufio.NewScanner(file)
-    for scanner.Scan() {
-    	log.Println(scanner.Text())
-        whiteList = append(whiteList, scanner.Text())
-    }
-    if err := scanner.Err(); err != nil {
-        log.Fatal(err)
-    }
+	} else {
+		defer file.Close()
+    	scanner := bufio.NewScanner(file)
+	    for scanner.Scan() {
+    		log.Println(scanner.Text())
+        	whiteList = append(whiteList, scanner.Text())
+    	}
+    	if err := scanner.Err(); err != nil {
+        	log.Fatal(err)
+    	}
+	}
 }
 
 func DebugDB(db* bitcask.Bitcask) {

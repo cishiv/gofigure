@@ -115,3 +115,14 @@ Just some screenshots for the initial UI I built using vanilla JS and Bulma
 ![](screenshots/7.png)
 ![](screenshots/7.png)
 ![](screenshots/8.png)
+
+## Improvements
+
+- user login
+- build in docker
+- `build plans`
+
+## Deployment
+
+PoC - heroku w/ container registry (https://gofigurecicd.herokuapp.com/)
+Endgame - AWS EB
